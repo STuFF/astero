@@ -11,17 +11,22 @@ function preload() {
     game.load.spritesheet('bullet', 'assets/sprites/bullet.png', 16, 16);
     game.load.spritesheet('stone1', 'assets/sprites/stone1.png', 72, 72);
     game.load.spritesheet('shipexplode', 'assets/sprites/shipexplode.png', 32, 32);
+    game.load.spritesheet('bulletexplode', 'assets/sprites/bulletexplode.png', 16, 16);
 }
 
 function create() {
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
+
+
     stonesGroup = game.add.group();
 
     stonesGroup.add(new Stone1(game));
     stonesGroup.add(new Stone1(game));
     stonesGroup.add(new Stone1(game));
+
+    mainShip = new MainShip(game, 40, 40);
 
     //ship = game.add.sprite(200, 200, 'ship');
     //ship.anchor.setTo(0.5);
@@ -31,7 +36,7 @@ function create() {
     //ship.body.maxVelocity.set(300);
 
 
-    mainShip = new MainShip(game, 40, 40);
+
 
     //  Game input
     //cursors = game.input.keyboard.createCursorKeys();
@@ -40,12 +45,14 @@ function create() {
 
 
 function update() {
-    game.physics.arcade.overlap(mainShip, stonesGroup, function (a, b) {
-        console.log('ok');
+    game.physics.arcade.overlap(mainShip, stonesGroup, function () {
         mainShip.explode();
     }, null, this);
 
-
+    game.physics.arcade.overlap(mainShip.bulletsGroup, stonesGroup, function (bullet, stone) {
+        //console.log(arguments);
+        bullet.explodeComponent.explode();
+    }, null, this);
 
 
     //if (cursors.up.isDown)

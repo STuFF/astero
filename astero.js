@@ -12,17 +12,22 @@ function preload() {
     game.load.spritesheet('bullet', 'assets/sprites/bullet.png', 16, 16);
     game.load.spritesheet('stone1', 'assets/sprites/stone1.png', 72, 72);
     game.load.spritesheet('shipexplode', 'assets/sprites/shipexplode.png', 32, 32);
+    game.load.spritesheet('bulletexplode', 'assets/sprites/bulletexplode.png', 16, 16);
 }
 
 function create() {
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
+
+
     stonesGroup = game.add.group();
 
     stonesGroup.add(new Stone1(game));
     stonesGroup.add(new Stone1(game));
     stonesGroup.add(new Stone1(game));
+
+    mainShip = new MainShip(game, 40, 40);
 
     //ship = game.add.sprite(200, 200, 'ship');
     //ship.anchor.setTo(0.5);
@@ -32,7 +37,7 @@ function create() {
     //ship.body.maxVelocity.set(300);
 
 
-    mainShip = new MainShip(game, 40, 40);
+
 
     //  Game input
     //cursors = game.input.keyboard.createCursorKeys();
@@ -41,12 +46,14 @@ function create() {
 
 
 function update() {
-    game.physics.arcade.overlap(mainShip, stonesGroup, function (a, b) {
-        console.log('ok');
+    game.physics.arcade.overlap(mainShip, stonesGroup, function () {
         mainShip.explode();
     }, null, this);
 
-
+    game.physics.arcade.overlap(mainShip.bulletsGroup, stonesGroup, function (bullet, stone) {
+        //console.log(arguments);
+        bullet.explodeComponent.explode();
+    }, null, this);
 
 
     //if (cursors.up.isDown)
@@ -82,19 +89,50 @@ function render () {
     //})
 }
 
-},{"./prefabs/MainShip":3,"./prefabs/Stone1":4}],2:[function(require,module,exports){
+},{"./prefabs/MainShip":4,"./prefabs/Stone1":5}],2:[function(require,module,exports){
+var ExplodeComponent = function (from, sprite) {
+    this.from = from;
+    this.explosion = this._createExplode(sprite);
+};
+
+ExplodeComponent.prototype._createExplode = function (sprite) {
+    var explode = new Phaser.Sprite(this.from.game, 0, 0, sprite);
+
+    explode.animations.add('explode', null, 20);
+    explode.anchor.setTo(0.5);
+    this.from.game.add.existing(explode);
+    explode.kill();
+
+    return explode;
+};
+
+ExplodeComponent.prototype.explode = function () {
+    this.from.kill();
+    this.explosion.reset(this.from.body.x + (this.from.body.width / 2), this.from.body.y + (this.from.body.height / 2));
+    this.explosion.play('explode', null, false, true);
+};
+
+
+module.exports = {
+    create: function (from, sprite) {
+        return new ExplodeComponent(from, sprite);
+    }
+};
+
+},{}],3:[function(require,module,exports){
 var utils = require('../utils');
+var explodeComponent = require('../mixins/explode');
 
 var Bullet = function (game) {
     Phaser.Sprite.call(this, game, 200, 200, 'bullet');
     game.physics.enable(this, Phaser.Physics.ARCADE);
 
+    this.explodeComponent = explodeComponent.create(this, 'bulletexplode');
+
     this.animations.add('fireing', [0, 1, 2, 1, 0], 20, true);
     this.animations.play('fireing');
 
     this.anchor.setTo(0.5);
-    //this.body.drag.set(100);
-    //this.body.maxVelocity.set(300);
 
     this.kill();
 };
@@ -108,15 +146,17 @@ Bullet.prototype.update = function () {
 
 module.exports = Bullet;
 
-},{"../utils":5}],3:[function(require,module,exports){
+},{"../mixins/explode":2,"../utils":6}],4:[function(require,module,exports){
 var utils = require('../utils');
 var Bullet = require('../prefabs/Bullet');
+var explodeComponent = require('../mixins/explode');
 
 var MainShip = function (game, x, y) {
     Phaser.Sprite.call(this, game, x, y, 'ship');
     game.physics.enable(this, Phaser.Physics.ARCADE);
 
-    this.exploding = false;
+    this.explodeComponent = explodeComponent.create(this, 'shipexplode');
+
     this.bulletTime = 0;
     this.anchor.setTo(0.5);
     this.body.drag.set(100);
@@ -126,42 +166,21 @@ var MainShip = function (game, x, y) {
     this.animations.add('burst', [1, 2, 3, 2, 1], 20, true);
     this.animations.play('idle');
 
-    this.group = this.game.add.group();
-
     this.game = game;
     this.z = 6;
 
     this.bulletsGroup = this._createBulletsGroup();
-    this.explosion = this._createExplode();
 
     this.body.setSize(30, 30, 0, 0);
-
-    this.group.add(this.explosion);
-    this.group.add(this);
 
     this.cursors = game.input.keyboard.createCursorKeys();
     game.input.keyboard.addKeyCapture([ Phaser.Keyboard.SPACEBAR ]);
 
-    game.add.existing(this.group);
+    game.add.existing(this);
 };
 
 MainShip.prototype = Object.create(Phaser.Sprite.prototype);
 MainShip.prototype.constructor = MainShip;
-
-MainShip.prototype._createExplode = function () {
-    var //group = this.game.add.group();
-        explode = new Phaser.Sprite(this.game, 0, 0, 'shipexplode');
-
-    explode.animations.add('explode', null, 20);
-    //explode.animations.play('explode');
-    explode.anchor.setTo(0.5);
-    explode.kill();
-
-    //group.add(explode);
-    //this.game.add.existing(group);
-    //this.explosionGroup = group;
-    return explode;
-};
 
 MainShip.prototype._createBulletsGroup = function () {
     var bulletsGroup = this.game.add.group(),
@@ -181,14 +200,7 @@ MainShip.prototype._createBulletsGroup = function () {
 };
 
 MainShip.prototype.explode = function () {
-    if (this.exploding) {
-        return;
-    }
-    this.exploding = true;
-    this.kill();
-    this.group.bringToTop(this.explosion);
-    this.explosion.reset(this.body.x + 16, this.body.y + 16);
-    this.explosion.play('explode', null, false, true);
+    this.explodeComponent.explode();
 };
 
 MainShip.prototype.fireBullet = function () {
@@ -236,7 +248,7 @@ MainShip.prototype.update = function () {
 
 module.exports = MainShip;
 
-},{"../prefabs/Bullet":2,"../utils":5}],4:[function(require,module,exports){
+},{"../mixins/explode":2,"../prefabs/Bullet":3,"../utils":6}],5:[function(require,module,exports){
 var utils = require('../utils');
 
 var Stone1 = function (game) {
@@ -261,25 +273,19 @@ Stone1.prototype.update = function () {
 
 module.exports = Stone1;
 
-},{"../utils":5}],5:[function(require,module,exports){
+},{"../utils":6}],6:[function(require,module,exports){
 var utils = {};
 
 utils.screenWrap = function (game, sprite) {
-    if (sprite.x < 0)
-    {
+    if (sprite.x < 0) {
         sprite.x = game.width;
-    }
-    else if (sprite.x > game.width)
-    {
+    } else if (sprite.x > game.width) {
         sprite.x = 0;
     }
 
-    if (sprite.y < 0)
-    {
+    if (sprite.y < 0) {
         sprite.y = game.height;
-    }
-    else if (sprite.y > game.height)
-    {
+    } else if (sprite.y > game.height) {
         sprite.y = 0;
     }
 };
