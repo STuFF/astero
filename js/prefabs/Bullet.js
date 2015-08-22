@@ -12,14 +12,16 @@ var Bullet = function (game) {
 
     this.anchor.setTo(0.5);
 
+    this.outOfBoundsKill = true;
+
     this.kill();
 };
 
 Bullet.prototype = Object.create(Phaser.Sprite.prototype);
 Bullet.prototype.constructor = Bullet;
 
-Bullet.prototype.update = function () {
-    utils.screenWrap(this.game, this);
-};
+//Bullet.prototype.update = function () {
+//    utils.screenWrap(this.game, this);
+//};
 
 module.exports = Bullet;

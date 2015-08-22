@@ -62,10 +62,10 @@ MainShip.prototype.fireBullet = function () {
 
         if (bullet) {
             bullet.reset(this.body.x + 16, this.body.y + 16);
-            bullet.lifespan = 2000;
+            bullet.lifespan = 1300;
             bullet.rotation = this.rotation;
             this.game.physics.arcade.velocityFromRotation((this.rotation - Phaser.Math.degToRad(90)), 400, bullet.body.velocity);
-            this.bulletTime = this.game.time.now + 150;
+            this.bulletTime = this.game.time.now + 500;
         }
     }
 };

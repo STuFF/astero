@@ -46,12 +46,13 @@ function create() {
 
 function update() {
     game.physics.arcade.overlap(mainShip, stonesGroup, function () {
-        mainShip.explode();
+        // mainShip.explode();
     }, null, this);
 
     game.physics.arcade.overlap(mainShip.bulletsGroup, stonesGroup, function (bullet, stone) {
         //console.log(arguments);
         bullet.explodeComponent.explode();
+        stone.flashComponent.flash();
     }, null, this);
 
 

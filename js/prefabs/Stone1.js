@@ -1,4 +1,5 @@
 var utils = require('../utils');
+var flashComponent = require('../mixins/flash');
 
 var Stone1 = function (game) {
     Phaser.Sprite.call(this, game, 250, 250, 'stone1');
@@ -11,6 +12,10 @@ var Stone1 = function (game) {
 
     this.body.velocity.setTo(game.rnd.integerInRange(-100, 100), game.rnd.integerInRange(-100, 100));
     this.body.setSize(55, 55, 0, 0);
+
+    this.setSize(2);
+
+    this.flashComponent = flashComponent.create(this, this.animations.getAnimation('rotate'));
 };
 
 Stone1.prototype = Object.create(Phaser.Sprite.prototype);
@@ -18,6 +23,10 @@ Stone1.prototype.constructor = Stone1;
 
 Stone1.prototype.update = function () {
     utils.screenWrap(this.game, this);
+};
+
+Stone1.prototype.setSize = function (newSize) {
+    this.scale.setTo(0.5);
 };
 
 module.exports = Stone1;
