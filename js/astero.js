@@ -14,72 +14,47 @@ function preload() {
     game.load.spritesheet('bulletexplode', 'assets/sprites/bulletexplode.png', 16, 16);
 }
 
+function spawnRocks(stonesGroup, x, y, amount, size) {
+    for (var i = 0; i < amount; i += 1) {
+        var stone = stonesGroup.getFirstExists(false);
+        if (stone) {
+            stone.resetStone(x, y, size);
+        }
+    }
+}
+
 function create() {
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
-
-
     stonesGroup = game.add.group();
 
-    stonesGroup.add(new Stone1(game));
-    stonesGroup.add(new Stone1(game));
-    stonesGroup.add(new Stone1(game));
+    for (var i = 0; i < 100; i += 1) {
+        var stone = new Stone1(game, 0, 0, 0);
+        stone.explodeEvent.add(function (explodedStone) {
+            if (explodedStone.stonesize < 2) {
+                spawnRocks(stonesGroup, explodedStone.x, explodedStone.y, 3, explodedStone.stonesize += 1);
+            }
+        });
+        //stone.kill();
+        stonesGroup.add(stone);
+    }
+
+    spawnRocks(stonesGroup, 250, 250, 3, 0);
 
     mainShip = new MainShip(game, 40, 40);
-
-    //ship = game.add.sprite(200, 200, 'ship');
-    //ship.anchor.setTo(0.5);
-    //game.physics.enable(ship, Phaser.Physics.ARCADE);
-    //
-    //ship.body.drag.set(100);
-    //ship.body.maxVelocity.set(300);
-
-
-
-
-    //  Game input
-    //cursors = game.input.keyboard.createCursorKeys();
-    //game.input.keyboard.addKeyCapture([ Phaser.Keyboard.SPACEBAR ]);
 }
 
 
 function update() {
     game.physics.arcade.overlap(mainShip, stonesGroup, function () {
-        // mainShip.explode();
+         mainShip.explode();
     }, null, this);
 
     game.physics.arcade.overlap(mainShip.bulletsGroup, stonesGroup, function (bullet, stone) {
-        //console.log(arguments);
         bullet.explodeComponent.explode();
-        stone.flashComponent.flash();
+        stone.hit();
     }, null, this);
-
-
-    //if (cursors.up.isDown)
-    //{
-    //    game.physics.arcade.accelerationFromRotation((ship.rotation - Phaser.Math.degToRad(90)), 200, ship.body.acceleration);
-    //}
-    //else
-    //{
-    //    ship.body.acceleration.set(0);
-    //}
-    //
-    //if (cursors.left.isDown)
-    //{
-    //    ship.body.angularVelocity = -300;
-    //}
-    //else if (cursors.right.isDown)
-    //{
-    //    ship.body.angularVelocity = 300;
-    //}
-    //else
-    //{
-    //    ship.body.angularVelocity = 0;
-    //}
-    //
-    //utils.screenWrap(game, ship);
-
 }
 
 function render () {

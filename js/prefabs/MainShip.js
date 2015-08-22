@@ -74,6 +74,10 @@ MainShip.prototype.update = function () {
     var cursors = this.cursors,
         game = this.game;
 
+    if (!this.alive) {
+        return;
+    }
+    
     if (cursors.up.isDown) {
         game.physics.arcade.accelerationFromRotation((this.rotation - Phaser.Math.degToRad(90)), 200, this.body.acceleration);
         this.animations.play('burst');
