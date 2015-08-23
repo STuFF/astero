@@ -36,7 +36,7 @@ function create() {
                 spawnRocks(stonesGroup, explodedStone.x, explodedStone.y, 3, explodedStone.stonesize += 1);
             }
         });
-        //stone.kill();
+
         stonesGroup.add(stone);
     }
 
@@ -58,6 +58,8 @@ function update() {
 }
 
 function render () {
+    //useful for debug
+
     //game.debug.body(mainShip);
     //stonesGroup.forEach(function (stone) {
     //    game.debug.body(stone);
